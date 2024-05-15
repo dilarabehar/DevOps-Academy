@@ -1,0 +1,82 @@
+version: "3.8"
+services:
+
+  app:
+    build: .
+    container_name: app
+    volumes:
+      - ./:/app
+    environment:
+      - name=value
+    depends_on:
+      - redis
+    ports:
+      - "3000:3000"
+    networks:
+      - my_network
+
+  db:
+    container_name: mysql_container
+    image: mysql
+    restart: always
+    environment:  
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: senior_db
+    ports:
+      - "3306:3306"
+    networks:
+      - my_network
+
+  redis:
+    container_name: redis_container
+    image: redis:latest
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - my_network
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: 'rabbitmq'
+    ports:
+        - 5672:5672
+        - 15672:15672
+    volumes:
+        - ~/.docker-conf/rabbitmq/data/:/var/lib/rabbitmq/
+        - ~/.docker-conf/rabbitmq/log/:/var/log/rabbitmq
+    networks:
+        - my_network
+  
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME= admin
+      - MONGO_INITDB_ROOT_PASSWORD= pass
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - my_network
+
+  mongo-express:
+    image: mongo-express:latest
+    restart: always
+    ports:
+      - "8081:8081"
+    environment:
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=admin
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=pass
+      - ME_CONFIG_MONGODB_ENABLE_ADMIN=true
+      - ME_CONFIG_MONGODB_SERVER=mongodb
+    networks:
+      - my_network
+
+volumes:
+  mongo-data:
+    driver: local
+
+networks:
+  my_network:
+    driver: bridge
